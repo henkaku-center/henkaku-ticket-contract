@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./Administration.sol";
-import "./InteractHenkakuToken.sol";
+import "./InteractCommunityToken.sol";
 import "./MintManager.sol";
 
-contract Ticket is ERC1155, ERC1155Supply, Administration, MintManager, InteractHenakuToken {
+contract Ticket is
+    Initializable,
+    ERC1155Upgradeable,
+    ERC1155SupplyUpgradeable,
+    Administration,
+    MintManager,
+    InteractCommunityToken
+{
     //@dev count up tokenId from 0
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -53,20 +61,19 @@ contract Ticket is ERC1155, ERC1155Supply, Administration, MintManager, Interact
 
     TicketInfo[] private registeredTickets;
 
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        address _communityToken
-    ) ERC1155("") MintManager() InteractHenakuToken(_communityToken) {
+    function initialize(string memory _name, string memory _symbol, address _communityToken) public initializer {
         name = _name;
         symbol = _symbol;
 
         registeredTickets.push(TicketInfo(address(0), 0, 0, 0, 0, 0, "", new uint256[](0), new address[](0)));
         _tokenIds.increment();
+
+        super.initializeAdministration();
+        super.initializeInteractCommunityToken(_communityToken);
     }
 
-    modifier onlyHenkakuHolders() {
-        _checkHenkakuV2Balance(1);
+    modifier onlyCommunityTokenHolders() {
+        _checkCommunityTokenBalance(1);
         _;
     }
 
@@ -91,7 +98,7 @@ contract Ticket is ERC1155, ERC1155Supply, Administration, MintManager, Interact
         uint64 _close_blockTimestamp,
         address[] memory _shareholdersAddresses,
         uint256[] memory _sharesAmounts
-    ) external onlyHenkakuHolders {
+    ) external onlyCommunityTokenHolders {
         if (
             _maxSupply == 0 ||
             keccak256(bytes(_metaDataURL)) == keccak256(bytes("")) ||
@@ -158,7 +165,7 @@ contract Ticket is ERC1155, ERC1155Supply, Administration, MintManager, Interact
     }
 
     // @dev mint function
-    function mint(uint256 _tokenId) external onlyHenkakuHolders {
+    function mint(uint256 _tokenId) external onlyCommunityTokenHolders {
         require(mintable, "Ticket: Not mintable");
         require(balanceOf(msg.sender, _tokenId) == 0, "Ticket: You already have this ticket");
 
@@ -169,7 +176,7 @@ contract Ticket is ERC1155, ERC1155Supply, Administration, MintManager, Interact
 
         ownerOfMintedIds[msg.sender].push(_tokenId);
 
-        batchTransferHenkakuV2(ticket.price, ticket.sharesAmounts, ticket.shareholdersAddresses);
+        batchTransferCommunityToken(ticket.price, ticket.sharesAmounts, ticket.shareholdersAddresses);
 
         _mint(msg.sender, _tokenId, 1, "");
 
@@ -195,7 +202,7 @@ contract Ticket is ERC1155, ERC1155Supply, Administration, MintManager, Interact
     }
 
     // @return token metadata uri
-    function uri(uint256 _tokenId) public view override(ERC1155) returns (string memory) {
+    function uri(uint256 _tokenId) public view override(ERC1155Upgradeable) returns (string memory) {
         return retrieveRegisteredTicket(_tokenId).uri;
     }
 
@@ -211,7 +218,7 @@ contract Ticket is ERC1155, ERC1155Supply, Administration, MintManager, Interact
         uint256[] memory _ids,
         uint256[] memory _amounts,
         bytes memory _data
-    ) internal virtual override(ERC1155, ERC1155Supply) {
-        ERC1155Supply._beforeTokenTransfer(_operator, _from, _to, _ids, _amounts, _data);
+    ) internal virtual override(ERC1155Upgradeable, ERC1155SupplyUpgradeable) {
+        ERC1155SupplyUpgradeable._beforeTokenTransfer(_operator, _from, _to, _ids, _amounts, _data);
     }
 }

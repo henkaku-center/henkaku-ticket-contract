@@ -6,8 +6,6 @@ import "./Administration.sol";
 abstract contract MintManager is Administration {
     bool public mintable;
 
-    constructor() {}
-
     function switchMintable() external onlyAdmins {
         mintable = !mintable;
     }
