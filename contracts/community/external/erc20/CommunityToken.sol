@@ -6,14 +6,14 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract HenkakuToken is ERC20, Ownable {
-    uint256 private maxSupply = 1_000_000_000e18; // 1 billion henkaku
+contract CommunityToken is ERC20, Ownable {
+    uint256 private maxSupply = 1_000_000_000e18; // 1 billion Community
     mapping(address => bool) private whitelist;
-    address public gateKeeper; // multisig contract address managed by henkaku community
+    address public gateKeeper; // multisig contract address managed by Community community
     address public dev; // EOA which updates whitelist systematically like using crontab.
     bool unlock;
 
-    constructor() ERC20("HENKAKU", "HENKAKU") {
+    constructor() ERC20("Community", "Community") {
         unlock = false;
     }
 
