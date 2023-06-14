@@ -4,11 +4,11 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./Administration.sol";
-import "./InteractCommunityToken.sol";
-import "./MintManager.sol";
+import "../Administration.sol";
+import "../InteractCommunityToken.sol";
+import "../MintManager.sol";
 
-contract Ticket is
+contract TicketV2 is
     Initializable,
     ERC1155Upgradeable,
     ERC1155SupplyUpgradeable,
@@ -226,5 +226,9 @@ contract Ticket is
         bytes memory _data
     ) internal virtual override(ERC1155Upgradeable, ERC1155SupplyUpgradeable) {
         ERC1155SupplyUpgradeable._beforeTokenTransfer(_operator, _from, _to, _ids, _amounts, _data);
+    }
+
+    function newFunction() public pure returns (uint256) {
+        return 1;
     }
 }

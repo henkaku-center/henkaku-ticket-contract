@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.17;
 
-abstract contract Administration {
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+abstract contract Administration is Initializable {
     mapping(address => bool) private _admins;
 
-    constructor() {
+    function _initializeAdministration() internal virtual initializer {
         _admins[msg.sender] = true;
     }
 
