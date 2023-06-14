@@ -9,18 +9,20 @@ import "./interfaces/IHenkakuToken.sol";
 abstract contract InteractCommunityToken is Administration, MintManager {
     address public communityToken;
 
-    function initializeInteractCommunityToken(address _communityToken) public virtual initializer {
+    function _initializeInteractCommunityToken(address _communityToken) internal virtual initializer {
         communityToken = _communityToken;
     }
 
-    function transferCommunityToken(uint256 _amount, address _to) internal {
-        _checkCommunityTokenBalance(_amount);
-        bool sent = IHenkakuToken(communityToken).transferFrom(msg.sender, _to, _amount);
-        require(sent, "Ticket: ERC20 token transfer failed");
+    function setCommunityToken(address _communityToken) external onlyAdmins {
+        communityToken = _communityToken;
     }
 
-    function batchTransferCommunityToken(uint256 totalPrice, uint256[] memory _amounts, address[] memory _to) internal {
-        _checkCommunityTokenBalance(totalPrice);
+    function _batchTransferCommunityToken(
+        uint256 totalAmount,
+        uint256[] memory _amounts,
+        address[] memory _to
+    ) internal {
+        _checkCommunityTokenBalance(totalAmount);
 
         uint256[] memory amounts = _amounts;
         uint256 amountsLength = amounts.length;

@@ -43,9 +43,15 @@ contract Ticket is
     error InvalidParams(string);
 
     /**
-     * @param uri: metadata uri
      * @param creator: creator's wallet address
+     * @param open_blockTimestamp: open block timestamp for sales period
+     * @param close_blockTimestamp: close block timestamp for sales period
      * @param maxSupply: max supply number of token
+     * @param id: event id
+     * @param price: price of ticket
+     * @param uri: metadata uri
+     * @param sharesAmounts: shares amount of shareholders
+     * @param shareholdersAddresses: shareholders' wallet addresses
      */
     struct TicketInfo {
         address creator;
@@ -59,17 +65,17 @@ contract Ticket is
         address[] shareholdersAddresses;
     }
 
-    TicketInfo[] private registeredTickets;
+    TicketInfo[] private _registeredTickets;
 
     function initialize(string memory _name, string memory _symbol, address _communityToken) public initializer {
         name = _name;
         symbol = _symbol;
 
-        registeredTickets.push(TicketInfo(address(0), 0, 0, 0, 0, 0, "", new uint256[](0), new address[](0)));
+        _registeredTickets.push(TicketInfo(address(0), 0, 0, 0, 0, 0, "", new uint256[](0), new address[](0)));
         _tokenIds.increment();
 
-        super.initializeAdministration();
-        super.initializeInteractCommunityToken(_communityToken);
+        super._initializeAdministration();
+        super._initializeInteractCommunityToken(_communityToken);
     }
 
     modifier onlyCommunityTokenHolders() {
@@ -107,7 +113,7 @@ contract Ticket is
 
         uint256 tokenId = _tokenIds.current();
         ownerOfRegisteredIds[msg.sender].push(tokenId);
-        registeredTickets.push(
+        _registeredTickets.push(
             TicketInfo(
                 msg.sender,
                 _open_blockTimestamp,
@@ -139,13 +145,13 @@ contract Ticket is
 
     // @return all registered TicketInfo
     function retrieveAllTickets() public view returns (TicketInfo[] memory) {
-        return registeredTickets;
+        return _registeredTickets;
     }
 
     // @return registered TicketInfo by tokenId
     function retrieveRegisteredTicket(uint256 _tokenId) public view returns (TicketInfo memory) {
-        require(registeredTickets.length > _tokenId, "Ticket: not available");
-        return registeredTickets[_tokenId];
+        require(_registeredTickets.length > _tokenId, "Ticket: not available");
+        return _registeredTickets[_tokenId];
     }
 
     // @return registered TicketInfo by address
@@ -155,7 +161,7 @@ contract Ticket is
         TicketInfo[] memory _ownerOfRegisteredTickets = new TicketInfo[](_ownerOfRegisteredIdsLength);
 
         for (uint256 i = 0; i < _ownerOfRegisteredIdsLength; ) {
-            TicketInfo memory _registeredTicket = registeredTickets[_ownerOfRegisteredIds[i]];
+            TicketInfo memory _registeredTicket = _registeredTickets[_ownerOfRegisteredIds[i]];
             _ownerOfRegisteredTickets[i] = _registeredTicket;
             unchecked {
                 ++i;
@@ -176,7 +182,7 @@ contract Ticket is
 
         ownerOfMintedIds[msg.sender].push(_tokenId);
 
-        batchTransferCommunityToken(ticket.price, ticket.sharesAmounts, ticket.shareholdersAddresses);
+        _batchTransferCommunityToken(ticket.price, ticket.sharesAmounts, ticket.shareholdersAddresses);
 
         _mint(msg.sender, _tokenId, 1, "");
 
@@ -192,7 +198,7 @@ contract Ticket is
         TicketInfo[] memory _ownerOfMintedTickets = new TicketInfo[](_ownerOfMintedIdsLength);
 
         for (uint256 i = 0; i < _ownerOfMintedIdsLength; ) {
-            _ownerOfMintedTickets[i] = registeredTickets[_ownerOfMintedIds[i]];
+            _ownerOfMintedTickets[i] = _registeredTickets[_ownerOfMintedIds[i]];
             unchecked {
                 ++i;
             }

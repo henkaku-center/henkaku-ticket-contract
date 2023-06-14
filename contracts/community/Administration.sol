@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 abstract contract Administration is Initializable {
     mapping(address => bool) private _admins;
 
-    function initializeAdministration() public virtual initializer {
+    function _initializeAdministration() internal virtual initializer {
         _admins[msg.sender] = true;
     }
 
