@@ -511,3 +511,75 @@ describe('after minting term', () => {
     TicketContract = await deployTicket(CommunityTokenContract.address)
   })
 })
+
+describe('edit ticket information', () => {
+  let TicketContract: Ticket
+  let CommunityTokenContract: CommunityToken
+  let deployer: SignerWithAddress
+  let creator: SignerWithAddress
+  let user1: SignerWithAddress
+  let user2: SignerWithAddress
+  let user3: SignerWithAddress
+  let outsider: SignerWithAddress
+
+  before(async () => {
+    ;[deployer, creator, user1, user2, user3, outsider] = await ethers.getSigners()
+    CommunityTokenContract = await deployAndDistributeCommunityToken({
+      deployer,
+      addresses: [creator.address, user1.address, user2.address, user3.address, deployer.address],
+      amount: ethers.utils.parseEther('1000'),
+    })
+    TicketContract = await deployTicket(CommunityTokenContract.address)
+  })
+
+  it('success to edit ticket information', async () => {
+    let now = (await ethers.provider.getBlock('latest')).timestamp
+
+    // @dev test emit register creative
+    await expect(
+      TicketContract.connect(creator).registerTicket(
+        2,
+        'ipfs://test1',
+        100,
+        now,
+        now + 1000000000000,
+        [creator.address, deployer.address],
+        [60, 40]
+      )
+    )
+      .to.emit(TicketContract, 'RegisterTicket')
+      .withArgs(
+        creator.address,
+        now,
+        now + 1000000000000,
+        2,
+        1,
+        100,
+        'ipfs://test1',
+        [60, 40],
+        [creator.address, deployer.address]
+      )
+
+    await expect(TicketContract.connect(creator).editTicket(1, 5, now + 10000, now + 1000000010000))
+      .to.emit(TicketContract, 'EditTicket')
+      .withArgs(1, 5, now + 10000, now + 1000000010000)
+
+    const ticket = await TicketContract.retrieveRegisteredTicket(1)
+    expect(ticket.maxSupply).to.be.equal(5)
+    expect(ticket.open_blockTimestamp).to.be.equal(now + 10000)
+    expect(ticket.close_blockTimestamp).to.be.equal(now + 1000000010000)
+    expect(ticket.creator).to.be.equal(creator.address)
+    expect(ticket.uri).to.be.equal('ipfs://test1')
+  })
+
+  it('fail to edit ticket information', async () => {
+    let now = (await ethers.provider.getBlock('latest')).timestamp
+
+    await expect(TicketContract.connect(user1).editTicket(1, 5, now + 10000, now + 1000000010000)).revertedWith(
+      'Ticket: not ticket creator'
+    )
+    await expect(TicketContract.connect(creator).editTicket(1, 1, now + 10000, now + 1000000010000)).revertedWith(
+      'Ticket: invalid max supply'
+    )
+  })
+})

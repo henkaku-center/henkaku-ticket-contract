@@ -38,6 +38,12 @@ contract Ticket is
         uint256[] sharesAmounts,
         address[] shareholdersAddresses
     );
+    event EditTicket(
+        uint256 indexed tokenId,
+        uint64 open_blockTimestamp,
+        uint64 close_blockTimestamp,
+        uint64 maxSupply
+    );
     event Mint(address indexed minter, uint256 indexed tokenId);
 
     error InvalidParams(string);
@@ -141,6 +147,24 @@ contract Ticket is
             _sharesAmounts,
             _shareholdersAddresses
         );
+    }
+
+    // @dev Edit registeredTicket
+    // @dev For creator. It can be edited only max supply, open block timestamp, close block timestamp
+    // @param tokenId, max supply, open block timestamp, close block timestamp
+    function editTicket(
+        uint256 _tokenId,
+        uint64 _maxSupply,
+        uint64 _open_blockTimestamp,
+        uint64 _close_blockTimestamp
+    ) external onlyCommunityTokenHolders {
+        TicketInfo storage ticket = _registeredTickets[_tokenId];
+        require(msg.sender == ticket.creator, "Ticket: not ticket creator");
+        require(_maxSupply > ticket.maxSupply, "Ticket: invalid max supply");
+        ticket.maxSupply = _maxSupply;
+        ticket.open_blockTimestamp = _open_blockTimestamp;
+        ticket.close_blockTimestamp = _close_blockTimestamp;
+        emit EditTicket(_tokenId, _maxSupply, _open_blockTimestamp, _close_blockTimestamp);
     }
 
     // @return all registered TicketInfo
